@@ -1,0 +1,30 @@
+{
+  "pools": {
+    "pool-a": {
+      "servers": [
+        "dns+11211://memcache-multi-a.mcw.mangadex",
+      ]
+    },
+    "pool-srv": {
+      "servers": [
+        "dnssrv://_memcache._tcp.memcache-srv.mcw.magadex",
+      ]
+    },
+    "pool-static": {
+      "servers": [
+        "1.2.3.4:1234",
+        "5.6.7.8:5678",
+      ]
+    },
+    "pool-null": null,
+    "pool-empty": {},
+    "pool-mix": {
+      "servers": [
+        "1.2.3.4:1234",
+        "dns@11211:memcache-multi-a.mcw.mangadex",
+        "dnssrv:_memcache._tcp.memcache-srv.mcw.mangadex",
+        "5.6.7.8:5678",
+      ]
+    }
+  }
+}

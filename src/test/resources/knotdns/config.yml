@@ -1,0 +1,30 @@
+server:
+  listen: "0.0.0.0@5353"
+  user: "root:root" # remain root for simplicity
+  rundir: "/var/run/knotd"
+
+  identity: "knotdns"
+  nsid: "knot-test"
+
+log:
+  - target: "stdout"
+    any: "debug"
+
+database:
+  storage: "/var/run/knotd/database"
+  journal-db: "/var/run/knotd/journal"
+  journal-db-max-size: "1M"
+
+template:
+  - id: "default"
+    storage: "/var/lib/knotd/zones"
+    zonefile-load: "whole"
+    journal-content: "none"
+    semantic-checks: "on"
+    global-module: [ "mod-noudp" ] # force TCP
+    zonefile-sync: -1 # do not try to persist changes at all, config shouldn't be dynamic
+    dnssec-signing: "off"
+
+zone:
+  - domain: "mcw.mangadex"
+    file: "mcw-dot-mangadex.zone"

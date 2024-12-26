@@ -1,0 +1,6 @@
+org.mangadex.mcw:
+  configs:
+    - source: "file://${java.io.tmpdir}/mcw-test/${random.uuid}-1/source"
+      output: "file://${java.io.tmpdir}/mcw-test/${random.uuid}-1/output"
+    - source: "file://${java.io.tmpdir}/mcw-test/${random.uuid}-2/source"
+      output: "file://${java.io.tmpdir}/mcw-test/${random.uuid}-2/output"

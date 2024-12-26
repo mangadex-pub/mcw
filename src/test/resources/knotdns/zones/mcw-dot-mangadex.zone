@@ -1,0 +1,43 @@
+$TTL 60
+$ORIGIN mcw.mangadex.
+@ IN SOA ns1.mcw.mangadex. opensource.mangadex.org. (
+    1735192539 ; Serial
+    14400  ; Refresh
+    3600   ; Retry
+    604800 ; Expire
+    3600   ; Negative TTL
+)
+
+;; NS & ACME/CAA
+$TTL 3600
+ns1        IN      A       127.0.0.1
+@          IN      NS      ns1.mcw.mangadex.
+
+;; A Records
+$TTL 60
+memcache-static-vip IN A 10.0.0.0
+memcache-static-1   IN A 10.0.0.1
+memcache-static-2   IN A 10.0.0.2
+memcache-static-3   IN A 10.0.0.3
+
+memcache-multi-a    IN A 10.0.0.1
+memcache-multi-a    IN A 10.0.0.2
+memcache-multi-a    IN A 10.0.0.3
+
+;; SRV Records
+_memcache._tcp.memcache-srv IN SRV 10 100 11211 memcache-static-1
+_memcache._tcp.memcache-srv IN SRV 20 100 11211 memcache-static-2
+_memcache._tcp.memcache-srv IN SRV 30 100 11211 memcache-static-3
+
+;; an SRV whose rdata is a CNAME
+;; technically forbidden by the spec (RFC 2782 section 2.2)
+_memcache._tcp.mc-vip IN SRV 10 100 11211 mc-vip
+
+;; CNAME Records
+$TTL 600
+mc-vip     IN CNAME memcache-static-vip
+mc-multi-a IN CNAME memcache-multi-a
+
+;; a CNAME whose rdata is an SRV name
+;; technically allowed by the spec, since it imposes essentially no constraint on CNAME rdata
+mc-srv-to-query IN CNAME _memcache._tcp.memcache-srv

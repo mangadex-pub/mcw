@@ -1,0 +1,23 @@
+networks:
+  mcw:
+    driver: "bridge"
+
+services:
+  knotdns:
+    build:
+      dockerfile_inline: |
+        FROM scratch
+        COPY --from=cznic/knot:3.4 / /
+    command: [ "/usr/sbin/knotd", "-c", "/var/lib/knotd/config.yml" ]
+    user: "root"
+    cap_drop: [ "ALL" ]
+    ports:
+      - "15353:5353/udp"
+      - "15353:5353/tcp"
+    tmpfs:
+      - "/var/run/knotd"
+    volumes:
+      - type: "bind"
+        source: "src/test/resources/knotdns"
+        target: "/var/lib/knotd"
+        read_only: true

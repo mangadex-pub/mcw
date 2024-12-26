@@ -1,0 +1,14 @@
+{
+  "properties": [
+    {
+      "name": "spring.application.hostname",
+      "type": "java.lang.String",
+      "description": "Relatively weakly auto-configured to the name of the current host."
+    },
+    {
+      "name": "spring.application.jdkver",
+      "type": "java.lang.String",
+      "description": "Runtime JDK version."
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+# Basic Spring Boot configuration
+spring:
+  application:
+    name: @project.artifactId@
+    environment: "${ENVIRONMENT:local}"
+    version: @project.version@
+    jdkver: "${java.vendor.version}"
+    identifier: "${spring.application.name}/${spring.application.version}"
+
+  config:
+    import:
+      - optional:classpath:application-${spring.application.environment}.yml
+      - optional:file:${CONFIGURATION:config.yml}
+
+  jackson:
+    serialization:
+      indent-output: true
+    parser:
+      allow-comments: true
+      allow-single-quotes: true
+      allow-trailing-comma: true
+      allow-unquoted-field-names: true
+      allow-yaml-comments: true
+
+  threads:
+    virtual:
+      enabled: true
+
+server:
+  forward-headers-strategy: native
+  max-http-request-header-size: 32KB
+  port: 8080
+  server-header: "${spring.application.identifier}"
+  shutdown: graceful
+  jetty:
+    max-http-form-post-size: 50MB
+
+logging:
+  level:
+    ROOT: warn
+    org.mangadex.mcw: info
+    org.springframework.boot.web.embedded.jetty.JettyWebServer: info
+    org.springframework.web.filter.CommonsRequestLoggingFilter: debug
+  pattern:
+    console: "​time=%clr(%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX}){faint} level=%clr(%level) thr=%clr(%t){faint} src=%clr(%logger{0}){cyan} %m%n%wEx"
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+        add-additional-paths: true
+      show-details: always
+  endpoints:
+    access:
+      default: read_only
+    web:
+      base-path: /actuator
+      exposure:
+        include:
+          - info
+          - health
+          - metrics
+          - prometheus
+  health:
+    diskspace:
+      path: "${java.io.tmpdir}"
+  metrics:
+    # see: https://github.com/spring-projects/spring-boot/issues/38583
+    tags:
+      application: ${spring.application.name}
+  observations:
+    annotations:
+      enabled: true
+
+org.mangadex.mcw:
+  configs: [ ]
+  dns:
+    discovery: AUTO
+    nameservers: ~
+    options: [ ]
+  lifecycle:
+    retry-delay-seconds: 5
+  render:
+    default-port: 11211
+    ttl:
+      min: 5
+      max: 60
+  source:
+    file:
+      check-period-seconds: 10
