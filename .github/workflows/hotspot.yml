@@ -1,18 +1,21 @@
 on:
   workflow_call:
     inputs:
-      JDK_VENDOR:
-        type: string
-        description: "JDK vendor to use for build"
-        required: false
-        default: "corretto"
       JDK_VERSION:
         type: string
         description: "JDK version to use for build"
         required: true
+      BUILD_IMAGE:
+        type: string
+        description: "Build image"
+        required: true
+      BUILD_REVISION:
+        type: string
+        description: "Build revision"
+        required: true
 
 jobs:
-  build-test:
+  build:
     runs-on: "ubuntu-latest"
     steps:
       - name: "Checkout repository"
@@ -20,20 +23,19 @@ jobs:
       - name: "Set up JDK"
         uses: "actions/setup-java@v4"
         with:
-          distribution: "${{ inputs.JDK_VENDOR }}"
+          distribution: "corretto"
           java-version: "${{ inputs.JDK_VERSION }}"
       - name: "Cache local Maven repository"
         uses: "actions/cache@v4"
         with:
           path: "~/.m2/repository"
-          key: "${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VERSION }}-${{ hashFiles('pom.xml') }}"
+          key: "${{ runner.os }}-hotspot-${{ inputs.JDK_VERSION }}-${{ hashFiles('pom.xml') }}"
           restore-keys: |
-            ${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VERSION }}-
+            ${{ runner.os }}-hotspot-${{ inputs.JDK_VERSION }}-
       - name: "Build and test"
         run: |
           set -euo pipefail
-          export VERSION="git-$(date +'%Y%m%d%H%M')-$(git rev-parse --short HEAD)"
-          mvn -B -e -fae --show-version -T$(nproc)C -Drevision="$VERSION" -DsurefireTmpDir="$(pwd)/.github/tmpdir" verify package
+          mvn -B -e -fae --show-version -Drevision="${{ inputs.BUILD_REVISION }}" -DsurefireTmpDir="$(pwd)/.github/tmpdir" verify package
           awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, " instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
       - name: "Archive jarfile"
         uses: "actions/upload-artifact@v4"

@@ -1,0 +1,39 @@
+on:
+  workflow_call:
+    inputs:
+      JDK_VERSION:
+        type: string
+        description: "JDK version to use for build"
+        required: true
+      BUILD_IMAGE:
+        type: string
+        description: "Build image"
+        required: true
+      BUILD_REVISION:
+        type: string
+        description: "Build revision"
+        required: true
+
+jobs:
+  build:
+    runs-on: "ubuntu-latest"
+    container: "ghcr.io/mangadex-pub/jdk-maven:${{ inputs.JDK_VERSION }}-graal"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+      - name: "Cache local Maven repository"
+        uses: "actions/cache@v4"
+        with:
+          path: "~/.m2/repository"
+          key: "${{ runner.os }}-graal-${{ inputs.JDK_VERSION }}-${{ hashFiles('pom.xml') }}"
+          restore-keys: |
+            ${{ runner.os }}-graal-${{ inputs.JDK_VERSION }}-
+      - name: "Build and test"
+        run: |
+          set -euo pipefail
+          mvn -Pnative -B -e -fae --show-version -Drevision="${{ inputs.BUILD_REVISION }}" -DskipTests package
+      - name: "Archive executable"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "mcw-glibc"
+          path: "target/mcw"

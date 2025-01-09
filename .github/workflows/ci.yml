@@ -6,8 +6,37 @@ on:
   workflow_dispatch: { }
 
 jobs:
-  build-hotspot:
-    uses: "./.github/workflows/build-hotspot.yml"
-    secrets: "inherit" # for Docker image publication
+  build_variables:
+    name: "Set build variables"
+    runs-on: "ubuntu-latest"
+    outputs:
+      build_image: "${{ steps.build_variables.outputs.build_image }}"
+      build_version: "${{ steps.build_variables.outputs.build_version }}"
+    steps:
+      - id: "build_variables"
+        run: |
+          set -euo pipefail
+          BUILD_IMAGE="$(echo "ghcr.io/$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          BUILD_VERSION="git-$(date +'%Y%m%d%H%M')-$(git rev-parse --short HEAD)"
+          echo "build_image=$BUILD_IMAGE"     | tee -a "$GITHUB_OUTPUT"
+          echo "build_version=$BUILD_VERSION" | tee -a "$GITHUB_OUTPUT"
+
+  hotspot:
+    name: "HotSpot JIT"
+    needs: "build_variables"
+    uses: "./.github/workflows/hotspot.yml"
+    secrets: "inherit"
     with:
       JDK_VERSION: "23"
+      BUILD_IMAGE: "${{ needs.build_variables.build_image }}"
+      BUILD_REVISION: "${{ needs.build_variables.build_version }}"
+
+  graal:
+    name: "GraalVM AOT"
+    needs: [ "build_variables", "hotspot" ]
+    uses: "./.github/workflows/graal.yml"
+    secrets: "inherit"
+    with:
+      JDK_VERSION: "23"
+      BUILD_IMAGE: "${{ needs.build_variables.build_image }}"
+      BUILD_REVISION: "${{ needs.build_variables.build_version }}"
