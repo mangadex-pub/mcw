@@ -44,7 +44,7 @@ class FSWriterTest {
      * than it really is in the first place (and it really is annoying to begin with...). Just skip it for now.
      */
     @Test
-    @DisabledIf(value = "isGithubCI")
+    @DisabledIf("isGithubCI")
     void writeFileWithCustomAttributes(@TempDir Path tempDir) throws IOException {
         var content = "Hello World!";
         var target = tempDir.resolve("output");
