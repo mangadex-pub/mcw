@@ -28,8 +28,8 @@ jobs:
     secrets: "inherit"
     with:
       JDK_VERSION: "23"
-      BUILD_IMAGE: "${{ needs.build_variables.build_image }}"
-      BUILD_REVISION: "${{ needs.build_variables.build_version }}"
+      BUILD_IMAGE: "${{ needs.build_variables.outputs.build_image }}"
+      BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
 
   graal:
     name: "GraalVM AOT"
@@ -38,5 +38,5 @@ jobs:
     secrets: "inherit"
     with:
       JDK_VERSION: "23"
-      BUILD_IMAGE: "${{ needs.build_variables.build_image }}"
-      BUILD_REVISION: "${{ needs.build_variables.build_version }}"
+      BUILD_IMAGE: "${{ needs.build_variables.outputs.build_image }}"
+      BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
