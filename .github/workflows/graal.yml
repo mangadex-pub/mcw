@@ -17,7 +17,9 @@ on:
 jobs:
   build:
     runs-on: "ubuntu-latest"
-    container: "ghcr.io/mangadex-pub/jdk-maven:${{ inputs.JDK_VERSION }}-graal"
+    container:
+      image: "ghcr.io/mangadex-pub/jdk-maven:${{ inputs.JDK_VERSION }}-graal"
+      options: "--user root" # this is sad, but Github CI is (once again) very silly
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
