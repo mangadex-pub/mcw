@@ -17,7 +17,7 @@ jobs:
         run: |
           set -euo pipefail
           BUILD_IMAGE="$(echo "ghcr.io/$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
-          BUILD_VERSION="git-$(date +'%Y%m%d%H%M')-$(git rev-parse --short HEAD)"
+          BUILD_VERSION="git-$(date +'%Y%m%d%H%M')-$(echo "$GITHUB_SHA" | head -c 7)"
           echo "build_image=$BUILD_IMAGE"     | tee -a "$GITHUB_OUTPUT"
           echo "build_version=$BUILD_VERSION" | tee -a "$GITHUB_OUTPUT"
 
