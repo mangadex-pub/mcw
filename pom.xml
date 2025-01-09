@@ -20,6 +20,7 @@
     <properties>
         <java.version>23</java.version>
         <revision>local-SNAPSHOT</revision>
+        <build.timestamp>${maven.build.timestamp}</build.timestamp>
 
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
         <maven-pmd-plugin.version>3.26.0</maven-pmd-plugin.version>
@@ -36,6 +37,7 @@
 
     <build>
         <finalName>${project.artifactId}</finalName>
+
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -284,6 +286,9 @@
                         </executions>
                         <configuration>
                             <buildArgs>
+                                <buildArg>--emit build-report</buildArg>
+                                <buildArg>--enable-sbom</buildArg>
+                                <buildArg>--gc=G1</buildArg>
                                 <buildArg>-march=compatibility</buildArg>
                             </buildArgs>
                         </configuration>

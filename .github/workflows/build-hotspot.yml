@@ -1,0 +1,63 @@
+on:
+  workflow_call:
+    inputs:
+      JDK_VENDOR:
+        type: string
+        description: "JDK vendor to use for build"
+        required: false
+        default: "corretto"
+      JDK_VERSION:
+        type: string
+        description: "JDK version to use for build"
+        required: true
+
+env:
+  REGISTRY: "ghcr.io"
+  IMAGE_NAME: "${{ github.repository }}"
+  DOCKER_LAYER_CACHE: "/tmp/.buildx-cache"
+
+jobs:
+  build-test:
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+      - name: "Set up JDK"
+        uses: "actions/setup-java@v4"
+        with:
+          distribution: "${{ inputs.JDK_VENDOR }}"
+          java-version: "${{ inputs.JDK_VERSION }}"
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v3"
+      - name: "Set up Docker Buildx"
+        uses: "docker/setup-buildx-action@v3"
+      - name: "Log in to the Container registry"
+        uses: "docker/login-action@v3"
+        with:
+          registry: "${{ env.REGISTRY }}"
+          username: "${{ github.actor }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
+      - name: "Cache Docker layers"
+        uses: "actions/cache@v4"
+        with:
+          path: "${{ env.DOCKER_LAYER_CACHE }}"
+          key: "${{ runner.os }}-hotspot-docker-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-${{ github.sha }}"
+          restore-keys: |
+            ${{ runner.os }}-hotspot-docker-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-
+      - name: "Cache local Maven repository"
+        uses: "actions/cache@v4"
+        with:
+          path: "~/.m2/repository"
+          key: "${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-${{ hashFiles('src/pom.xml') }}"
+          restore-keys: |
+            ${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-
+      - name: "Build and test"
+        run: |
+          export VERSION="git-$(date -d "$CI_COMMIT_TIMESTAMP" +'%Y%m%d-%H%M')-$CI_COMMIT_SHORT_SHA"
+          mvn -B -e -fae --show-version -T$(nproc)C -Drevision="$VERSION" verify package
+          awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, " instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
+      - name: "Archive jarfile"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "mcw.jar"
+          path: "target/mcw.jar"

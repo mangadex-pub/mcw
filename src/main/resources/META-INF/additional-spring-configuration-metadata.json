@@ -9,6 +9,16 @@
       "name": "spring.application.jdkver",
       "type": "java.lang.String",
       "description": "Runtime JDK version."
+    },
+    {
+      "name": "spring.application.build.timestamp",
+      "type": "java.time.LocalDateTime",
+      "description": "Maven build timestamp."
+    },
+    {
+      "name": "spring.application.build.commit",
+      "type": "java.lang.String",
+      "description": "Git commit associated with the build if available."
     }
   ]
 }

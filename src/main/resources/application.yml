@@ -3,6 +3,9 @@ spring:
   application:
     name: @project.artifactId@
     environment: "${ENVIRONMENT:local}"
+    build:
+      commit: @git.commit.id.describe-short@
+      timestamp: @build.timestamp@
     version: @project.version@
     jdkver: "${java.vendor.version}"
     identifier: "${spring.application.name}/${spring.application.version}"
