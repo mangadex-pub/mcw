@@ -54,7 +54,7 @@ jobs:
       - name: "Build and test"
         run: |
           set -euo pipefail
-          export VERSION="git-$(date -d "$CI_COMMIT_TIMESTAMP" +'%Y%m%d-%H%M')-$CI_COMMIT_SHORT_SHA"
+          export VERSION="git-$(date +'%Y%m%d%H%M')-$(git rev-parse --short HEAD)"
           mvn -B -e -fae --show-version -T$(nproc)C -Drevision="$VERSION" -DsurefireTmpDir="$(pwd)/.github/tmpdir" verify package
           awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, " instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
       - name: "Archive jarfile"
