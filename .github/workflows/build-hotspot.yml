@@ -19,6 +19,13 @@ env:
 jobs:
   build-test:
     runs-on: "ubuntu-latest"
+    services:
+      knotdns:
+        image: "cznic/knot:3.4"
+        ports:
+          - "5353:5353"
+        volumes:
+          - "${{ github.workspace }}/srv/test/resources/knotdns:/var/lib/knotd"
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
@@ -27,23 +34,6 @@ jobs:
         with:
           distribution: "${{ inputs.JDK_VENDOR }}"
           java-version: "${{ inputs.JDK_VERSION }}"
-      - name: "Set up QEMU"
-        uses: "docker/setup-qemu-action@v3"
-      - name: "Set up Docker Buildx"
-        uses: "docker/setup-buildx-action@v3"
-      - name: "Log in to the Container registry"
-        uses: "docker/login-action@v3"
-        with:
-          registry: "${{ env.REGISTRY }}"
-          username: "${{ github.actor }}"
-          password: "${{ secrets.GITHUB_TOKEN }}"
-      - name: "Cache Docker layers"
-        uses: "actions/cache@v4"
-        with:
-          path: "${{ env.DOCKER_LAYER_CACHE }}"
-          key: "${{ runner.os }}-hotspot-docker-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-${{ github.sha }}"
-          restore-keys: |
-            ${{ runner.os }}-hotspot-docker-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-
       - name: "Cache local Maven repository"
         uses: "actions/cache@v4"
         with:
@@ -55,10 +45,35 @@ jobs:
         run: |
           set -euo pipefail
           export VERSION="git-$(date +'%Y%m%d%H%M')-$(git rev-parse --short HEAD)"
+
+          export KNOTDNS_CI="localhost:5353"
+          export JAVAIOTMPDIR="$(pwd)/.github/tmpdir"
+          chmod -v -R 0777 "$JAVAIOTMPDIR"
+
           mvn -B -e -fae --show-version -T$(nproc)C -Drevision="$VERSION" -DsurefireTmpDir="$(pwd)/.github/tmpdir" verify package
+
           awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, " instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
       - name: "Archive jarfile"
         uses: "actions/upload-artifact@v4"
         with:
           name: "mcw.jar"
           path: "target/mcw.jar"
+
+
+#       - name: "Set up QEMU"
+#        uses: "docker/setup-qemu-action@v3"
+#      - name: "Set up Docker Buildx"
+#        uses: "docker/setup-buildx-action@v3"
+#      - name: "Log in to the Container registry"
+#        uses: "docker/login-action@v3"
+#        with:
+#          registry: "${{ env.REGISTRY }}"
+#          username: "${{ github.actor }}"
+#          password: "${{ secrets.GITHUB_TOKEN }}"
+#      - name: "Cache Docker layers"
+#        uses: "actions/cache@v4"
+#        with:
+#          path: "${{ env.DOCKER_LAYER_CACHE }}"
+#          key: "${{ runner.os }}-hotspot-docker-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-${{ github.sha }}"
+#          restore-keys: |
+#            ${{ runner.os }}-hotspot-docker-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-

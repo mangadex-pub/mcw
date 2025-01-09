@@ -1,5 +1,7 @@
 package org.mangadex.mcw.dns;
 
+import static java.lang.System.getenv;
+
 import java.io.File;
 import java.nio.file.Paths;
 import java.util.List;
@@ -10,9 +12,6 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.ComposeContainer;
 import org.testcontainers.containers.wait.strategy.HostPortWaitStrategy;
 import org.testcontainers.junit.jupiter.Container;
-
-import org.mangadex.mcw.dns.DnsProperties.DnsDiscovery;
-import org.mangadex.mcw.dns.DnsProperties.DnsOptions;
 
 @TestConfiguration(proxyBeanMethods = false)
 public class KnotSidecar {
@@ -28,12 +27,18 @@ public class KnotSidecar {
 
     @DynamicPropertySource
     static void testNameservers(DynamicPropertyRegistry registry) {
+        if (getenv("KNOTDNS_CI") != null) {
+            registry.add("org.mangadex.mcw.dns.nameservers", () -> List.of(getenv("KNOTDNS_CI")));
+        } else {
+            var knotdns = startContainerAndGetHostname() + ":" + KNOTDNS_PORT_DNS;
+            registry.add("org.mangadex.mcw.dns.nameservers", () -> List.of(knotdns));
+        }
+    }
+
+    private static String startContainerAndGetHostname() {
         knotdns.start();
         knotdns.waitingFor("knotdns", new HostPortWaitStrategy());
-        var host = knotdns.getServiceHost("knotdns", KNOTDNS_PORT_DNS);
-        registry.add("org.mangadex.mcw.dns.discovery", () -> DnsDiscovery.STATIC);
-        registry.add("org.mangadex.mcw.dns.nameservers", () -> List.of("%s:%d".formatted(host, KNOTDNS_PORT_DNS)));
-        registry.add("org.mangadex.mcw.dns.options", () -> List.of(DnsOptions.FORCE_TCP));
+        return knotdns.getServiceHost("knotdns", KNOTDNS_PORT_DNS);
     }
 
 }
