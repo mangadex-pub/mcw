@@ -33,7 +33,7 @@ jobs:
       - name: "Build and test"
         run: |
           set -euo pipefail
-          mvn -Pnative -B -e -fae --show-version -Drevision="${{ inputs.BUILD_REVISION }}" -DskipTests package
+          mvn -Pnative -B -Dmaven.repo.local="$HOME/.m2/repository" -e -fae --show-version -Drevision="${{ inputs.BUILD_REVISION }}" -DskipTests package
       - name: "Archive executable"
         uses: "actions/upload-artifact@v4"
         with:
