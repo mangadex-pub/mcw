@@ -26,9 +26,9 @@ jobs:
         uses: "actions/cache@v4"
         with:
           path: "~/.m2/repository"
-          key: "${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-${{ hashFiles('src/pom.xml') }}"
+          key: "${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VERSION }}-${{ hashFiles('pom.xml') }}"
           restore-keys: |
-            ${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VENDOR }}-${{ inputs.JDK_VERSION }}-
+            ${{ runner.os }}-hotspot-maven-${{ inputs.JDK_VERSION }}-
       - name: "Build and test"
         run: |
           set -euo pipefail
