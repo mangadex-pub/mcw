@@ -31,7 +31,6 @@ public class Bootstrap implements ApplicationRunner {
 
     public record BuildInfo(
         String version,
-        String commit,
         String timestamp
     ) {
 
@@ -39,9 +38,8 @@ public class Bootstrap implements ApplicationRunner {
             try {
                 var properties = new YamlPropertySourceLoader().load("meta", new ClassPathResource("application.yml")).getFirst();
                 var version = requireNonNull((String) properties.getProperty("spring.application.version"));
-                var commit = requireNonNull((String) properties.getProperty("spring.application.build.commit"));
                 var timestamp = requireNonNull((String) properties.getProperty("spring.application.build.timestamp"));
-                return new BuildInfo(version, commit, timestamp);
+                return new BuildInfo(version, timestamp);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }

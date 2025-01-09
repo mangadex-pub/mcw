@@ -14,13 +14,6 @@ on:
 jobs:
   build-test:
     runs-on: "ubuntu-latest"
-    services:
-      knotdns:
-        image: "cznic/knot:3.4"
-        ports:
-          - "5353:5353"
-        volumes:
-          - "${{ github.workspace }}/src/test/resources/knotdns:/var/lib/knotd"
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
@@ -40,10 +33,6 @@ jobs:
         run: |
           set -euo pipefail
           export VERSION="git-$(date +'%Y%m%d%H%M')-$(git rev-parse --short HEAD)"
-
-          export KNOTDNS_CI="localhost:5353"
-          export JAVAIOTMPDIR="$(pwd)/.github/tmpdir"
-          chmod -v -R 0777 "$JAVAIOTMPDIR"
 
           mvn -B -e -fae --show-version -T$(nproc)C -Drevision="$VERSION" -DsurefireTmpDir="$(pwd)/.github/tmpdir" verify package
 

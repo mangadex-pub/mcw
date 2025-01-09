@@ -15,7 +15,7 @@ public class MCW {
     public static void main(String[] args) {
         var buildInfo = BuildInfo.fromApplicationYaml();
         if (asList(args).contains("--version")) {
-            System.out.printf("MCW version %s (%s %s)\n", buildInfo.version(), buildInfo.commit(), buildInfo.timestamp());
+            System.out.printf("MCW version %s (%s)\n", buildInfo.version(), buildInfo.timestamp());
             return;
         }
 
