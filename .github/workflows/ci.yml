@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-hotspot:
-    uses: ".github/workflows/build-hotspot.yml"
+    uses: "./.github/workflows/build-hotspot.yml"
     secrets: "inherit" # for Docker image publication
     with:
       JDK_VERSION: "23"
