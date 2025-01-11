@@ -19,7 +19,7 @@ runs:
         restore-keys: |
           ${{ runner.os }}-${{ runner.arch }}-
     - name: "Build and test"
-      shell: "/bin/bash"
+      shell: "bash"
       run: |
         set -euo pipefail
 
