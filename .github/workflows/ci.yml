@@ -13,11 +13,11 @@ jobs:
     name: "Set build variables"
     runs-on: "ubuntu-latest"
     outputs:
-      build_version: "${{ steps.build_variables.outputs.build_version }}"
-      java_version:  "${{ steps.build_variables.outputs.java_version  }}"
-      docker_image:  "${{ steps.build_variables.outputs.docker_image  }}"
+      build_version: "${{ steps.set_variables.outputs.build_version }}"
+      java_version:  "${{ steps.set_variables.outputs.java_version  }}"
+      docker_image:  "${{ steps.set_variables.outputs.docker_image  }}"
     steps:
-      - id: "build_variables"
+      - id: "set_variables"
         run: |
           set -euo pipefail
 
@@ -35,13 +35,13 @@ jobs:
     runs-on: "ubuntu-latest"
     needs: [ "set_variables" ]
     container:
-      image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.build_variables.outputs.java_version }}-corretto"
+      image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.set_variables.outputs.java_version }}-corretto"
       options: "--user root"
     steps:
       - name: "Maven Build (JIT)"
         uses: "./.github/actions/maven-build.yml"
         with:
-          BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
+          BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
           MAVEN_JOB_ARGS: "verify package"
       - name: "Archive jarfile"
         uses: "actions/upload-artifact@v4"
@@ -54,13 +54,13 @@ jobs:
     runs-on: "ubuntu-latest"
     needs: [ "set_variables", "build_hotspot" ]
     container:
-      image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.build_variables.outputs.java_version }}-graal"
+      image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.set_variables.outputs.java_version }}-graal"
       options: "--user root"
     steps:
       - name: "Maven Build (AOT)"
         uses: "./.github/actions/maven-build.yml"
         with:
-          BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
+          BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
           MAVEN_JOB_ARGS: "package -Pnative -DskipTests"
       - name: "Archive binary"
         uses: "actions/upload-artifact@v4"
