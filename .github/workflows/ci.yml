@@ -55,7 +55,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-
             ${{ runner.os }}-
-      - name: "Maven Build (JIT)"
+      - name: "Maven Build"
         uses: "./.github/actions/maven-build"
         with:
           BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
@@ -67,6 +67,7 @@ jobs:
           path: "target/mcw.jar"
 
   publish_hotspot:
+    name: "Publish (HotSpot)"
     needs: [ "set_variables", "build_hotspot" ]
     uses: "./.github/workflows/publish.yml"
     with:
@@ -95,7 +96,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-
             ${{ runner.os }}-
-      - name: "Maven Build (AOT)"
+      - name: "Maven Build"
         uses: "./.github/actions/maven-build"
         with:
           BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
@@ -107,6 +108,7 @@ jobs:
           path: "target/mcw"
 
   publish_graal:
+    name: "Publish (GraalVM)"
     needs: [ "set_variables", "build_graal" ]
     uses: "./.github/workflows/publish.yml"
     with:
