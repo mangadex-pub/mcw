@@ -21,7 +21,6 @@
         <java.version>23</java.version>
         <revision>local-SNAPSHOT</revision>
         <build.timestamp>${maven.build.timestamp}</build.timestamp>
-
         <surefireTmpDir>${java.io.tmpdir}</surefireTmpDir>
 
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
@@ -299,13 +298,7 @@
             </build>
         </profile>
         <profile>
-            <id>native-static</id>
-            <activation>
-                <property>
-                    <name>native-static</name>
-                    <value>musl</value>
-                </property>
-            </activation>
+            <id>native-community</id>
             <build>
                 <plugins>
                     <plugin>
@@ -322,12 +315,8 @@
                         </executions>
                         <configuration>
                             <buildArgs>
-                                <buildArg>--native-compiler-path=${native.static.cc}</buildArg>
-                                <buildArg>--libc=musl</buildArg>
-                                <buildArg>--static</buildArg>
+                                <buildArg>--gc=serial</buildArg>
                                 <buildArg>-march=compatibility</buildArg>
-                                <buildArg>--native-compiler-options=-I${native.static.zlibdir}</buildArg>
-                                <buildArg>--native-compiler-options=-L${native.static.zlibdir}</buildArg>
                             </buildArgs>
                         </configuration>
                     </plugin>
