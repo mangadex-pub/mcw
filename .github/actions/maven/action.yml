@@ -7,6 +7,10 @@ inputs:
   MAVEN_JOB_ARGS:
     description: "Maven arguments to add"
     required: true
+  JVMOPT_NATIVE_ACCESS:
+    description: "Allow native access at JVM level"
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -15,6 +19,11 @@ runs:
       shell: "bash"
       run: |
         set -euo pipefail
+
+        if [ -n "${{ inputs.JVMOPT_NATIVE_ACCESS }}" ]; then
+          echo "Allow native access to modules/classes: ${{ inputs.JVMOPT_NATIVE_ACCESS }}"
+          export MAVEN_OPTS="$MAVEN_OPTS --enable-native-access=${{ inputs.JVMOPT_NATIVE_ACCESS }}"
+        fi
 
         mvn -B -e -fae --show-version \
             -Dmaven.repo.local="${{ github.workspace }}/.ci/transient/m2-repo" \

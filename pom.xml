@@ -20,7 +20,9 @@
     <properties>
         <java.version>23</java.version>
         <revision>local-SNAPSHOT</revision>
+
         <build.timestamp>${maven.build.timestamp}</build.timestamp>
+        <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
         <surefireTmpDir>${java.io.tmpdir}</surefireTmpDir>
 
         <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
@@ -134,7 +136,7 @@
                     <formats>
                         <format>HTML</format>
                     </formats>
-                    <nvdApiKey>${env.NVD_API_KEY}</nvdApiKey>
+                    <nvdApiKey>${nvdApiKey}</nvdApiKey>
                     <nvdValidForHours>168</nvdValidForHours>
                     <prettyPrint>true</prettyPrint>
                 </configuration>

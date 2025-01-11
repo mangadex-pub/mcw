@@ -35,6 +35,39 @@ jobs:
           DOCKER_IMAGE="$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
           echo "docker_image=$DOCKER_IMAGE"   | tee -a "$GITHUB_OUTPUT"
 
+  dependency_report:
+    name: "OWASP DepCheck"
+    runs-on: "ubuntu-latest"
+    needs: [ "set_variables" ]
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+        with:
+          persist-credentials: false
+      - name: "Install JDK"
+        uses: "actions/setup-java@v4"
+        with:
+          distribution: "corretto"
+          java-version: "${{ needs.set_variables.outputs.java_version }}"
+      - name: "Cache Maven repository"
+        uses: "actions/cache@v4"
+        with:
+          path: "${{ github.workspace }}/.ci/transient/m2-repo"
+          key: "${{ runner.os }}-${{ runner.arch }}-owasp-${{ hashFiles('pom.xml') }}"
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-owasp-
+      - name: "Maven Build"
+        uses: "./.github/actions/maven-build"
+        with:
+          BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
+          MAVEN_JOB_ARGS: "dependency-check:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}"
+          JVMOPT_NATIVE_ACCESS: "ALL-UNNAMED"
+      - name: "Archive jarfile"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "dependency-check-report.html"
+          path: "target/dependency-check-report.html"
+
   build_hotspot:
     name: "Build (HotSpot)"
     runs-on: "ubuntu-latest"
@@ -53,10 +86,9 @@ jobs:
         uses: "actions/cache@v4"
         with:
           path: "${{ github.workspace }}/.ci/transient/m2-repo"
-          key: "${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pom.xml') }}"
+          key: "${{ runner.os }}-${{ runner.arch }}-hostpot-${{ hashFiles('pom.xml') }}"
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-
-            ${{ runner.os }}-
+            ${{ runner.os }}-${{ runner.arch }}-hotspot-
       - name: "Maven Build"
         uses: "./.github/actions/maven-build"
         with:
@@ -97,10 +129,9 @@ jobs:
         uses: "actions/cache@v4"
         with:
           path: "${{ github.workspace }}/.ci/transient/m2-repo"
-          key: "${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pom.xml') }}"
+          key: "${{ runner.os }}-${{ runner.arch }}-graal-${{ hashFiles('pom.xml') }}"
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-
-            ${{ runner.os }}-
+            ${{ runner.os }}-${{ runner.arch }}-graal-
       - name: "Maven Build"
         uses: "./.github/actions/maven-build"
         with:
@@ -109,8 +140,13 @@ jobs:
       - name: "Archive binary"
         uses: "actions/upload-artifact@v4"
         with:
-          name: "mcw-bin"
+          name: "mcw-aot"
           path: "target/mcw"
+      - name: "Archive build report"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "mcw-aot-build-report.html"
+          path: "target/mcw-build-report.html"
 
   publish_graal:
     name: "Publish (GraalVM)"
@@ -118,7 +154,7 @@ jobs:
     uses: "./.github/workflows/publish.yml"
     with:
       JAVA_VERSION: "${{ needs.set_variables.outputs.java_version }}"
-      ARTIFACT_NAME: "mcw-bin"
+      ARTIFACT_NAME: "mcw-aot"
       DOCKER_REGISTRY: "ghcr.io"
       DOCKER_IMAGE: "${{ needs.set_variables.outputs.docker_image }}"
       DOCKER_TARGET: "graal"
