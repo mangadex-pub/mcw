@@ -1,17 +1,15 @@
-FROM ghcr.io/mangadex-pub/jdk-maven:23-corretto AS hotspot-corretto
+FROM amazoncorretto:23-headless AS hotspot
 
 USER root
-RUN mkdir -pv /opt/mcw
-COPY target/mcw.jar /opt/mcw/mcw.jar
+RUN mkdir -pv /opt/mcw/bin
+COPY target/mcw.jar /opt/mcw/bin/mcw.jar
 
-USER mangadex
-RUN java -jar /opt/mcw/mcw.jar --version
+RUN java -jar /opt/mcw/bin/mcw.jar --version
 
-FROM ghcr.io/mangadex-pub/containers-base/rockylinux:9 AS aot-glibc
+FROM ghcr.io/mangadex-pub/containers-base/rockylinux:9 AS graal
 
 USER root
-RUN mkdir -pv /opt/mcw
+RUN mkdir -pv /opt/mcw/bin
 COPY target/mcw /opt/mcw/mcw
 
-USER mangadex
 RUN /opt/mcw/mcw --version

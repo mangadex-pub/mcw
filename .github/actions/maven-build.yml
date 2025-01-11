@@ -1,0 +1,36 @@
+name: "HotSpot Build"
+
+inputs:
+  BUILD_REVISION:
+    description: "Canonical build revision for this execution"
+    required: true
+  MAVEN_JOB_ARGS:
+    description: "Maven arguments to add"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: "Checkout repository"
+      uses: "actions/checkout@v4"
+    - name: "Cache local Maven repository"
+      uses: "actions/cache@v4"
+      with:
+        path: "~/.m2/repository"
+        key: "${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pom.xml') }}"
+        restore-keys: |
+          ${{ runner.os }}-${{ runner.arch }}-
+    - name: "Build and test"
+      shell: "/bin/bash"
+      run: |
+        set -euo pipefail
+
+        mvn -B -e -fae --show-version \
+            -Dmaven.repo.local="$HOME/.m2/repository" \
+            -DsurefireTmpDir="$(pwd)/.github/tmpdir" \
+            -Drevision="${{ inputs.BUILD_REVISION }}" \
+            ${{ inputs.MAVEN_JOB_ARGS }}
+
+        if [ -f "target/jacoco/jacoco.csv" ]; then
+          awk -F"," '{ instructions += $4 + $5; covered += $5 } END { print covered, "/", instructions, " instructions covered"; print 100*covered/instructions, "% covered" }' target/site/jacoco/jacoco.csv
+        fi

@@ -5,8 +5,11 @@ on:
     paths-ignore: [ "README.md" ]
   workflow_dispatch: { }
 
+env:
+  JAVA_VERSION: "23"
+
 jobs:
-  build_variables:
+  set_variables:
     name: "Set build variables"
     runs-on: "ubuntu-latest"
     outputs:
@@ -21,22 +24,40 @@ jobs:
           echo "build_image=$BUILD_IMAGE"     | tee -a "$GITHUB_OUTPUT"
           echo "build_version=$BUILD_VERSION" | tee -a "$GITHUB_OUTPUT"
 
-  hotspot:
-    name: "HotSpot JIT"
-    needs: "build_variables"
-    uses: "./.github/workflows/hotspot.yml"
-    secrets: "inherit"
-    with:
-      JDK_VERSION: "23"
-      BUILD_IMAGE: "${{ needs.build_variables.outputs.build_image }}"
-      BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
+  build_hotspot:
+    name: "HotSpot"
+    runs-on: "ubuntu-latest"
+    needs: [ "set_variables" ]
+    container:
+      image: "ghcr.io/mangadex-pub/jdk-maven:${{ env.JAVA_VERSION }}-corretto"
+      options: "--user root" # this is sad, but Github CI is (once again) very silly
+    steps:
+      - name: "Maven Build (JIT)"
+        uses: "./.github/actions/maven-build.yml"
+        with:
+          BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
+          MAVEN_JOB_ARGS: "verify package"
+      - name: "Archive jarfile"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "mcw.jar"
+          path: "target/mcw.jar"
 
-  graal:
-    name: "GraalVM AOT"
-    needs: [ "build_variables", "hotspot" ]
-    uses: "./.github/workflows/graal.yml"
-    secrets: "inherit"
-    with:
-      JDK_VERSION: "23"
-      BUILD_IMAGE: "${{ needs.build_variables.outputs.build_image }}"
-      BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
+  build_graal:
+    name: "GraalVM"
+    runs-on: "ubuntu-latest"
+    needs: [ "set_variables", "build_hotspot" ]
+    container:
+      image: "ghcr.io/mangadex-pub/jdk-maven:${{ env.JAVA_VERSION }}-graal"
+      options: "--user root" # this is sad, but Github CI is (once again) very silly
+    steps:
+      - name: "Maven Build (AOT)"
+        uses: "./.github/actions/maven-build.yml"
+        with:
+          BUILD_REVISION: "${{ needs.build_variables.outputs.build_version }}"
+          MAVEN_JOB_ARGS: "package -Pnative -DskipTests"
+      - name: "Archive binary"
+        uses: "actions/upload-artifact@v4"
+        with:
+          name: "mcw-${{ runner.os }}-${{ runner.arch }}"
+          path: "target/mcw"
