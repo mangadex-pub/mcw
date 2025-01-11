@@ -1,4 +1,5 @@
-FROM amazoncorretto:23-headless AS hotspot
+ARG JAVA_VERSION="23"
+FROM amazoncorretto:${JAVA_VERSION}-headless AS hotspot
 
 USER root
 RUN mkdir -pv /opt/mcw/bin

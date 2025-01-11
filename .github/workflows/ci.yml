@@ -9,6 +9,8 @@ on:
 
 env:
   JAVA_VERSION: "23"
+  DOCKER_LAYER_CACHE: "/tmp/.buildx-cache"
+  DOCKER_REGISTRY: "ghcr.io"
 
 jobs:
   set_variables:
@@ -16,6 +18,7 @@ jobs:
     runs-on: "ubuntu-latest"
     outputs:
       build_version: "${{ steps.set_variables.outputs.build_version }}"
+      image_version_short: "${{ steps.set_variables.outputs.image_version_short }}"
       java_version: "${{ steps.set_variables.outputs.java_version  }}"
       docker_image: "${{ steps.set_variables.outputs.docker_image  }}"
     steps:
@@ -25,15 +28,17 @@ jobs:
 
           echo "Setting workflow variables..."
 
-          BUILD_VERSION="jdk-${{ env.JAVA_VERSION }}.git-$(echo "$GITHUB_SHA" | head -c 7).build-$(date +'%Y%m%d%H%M')"
+          IMAGE_VERSION_SHORT="jdk-${{ env.JAVA_VERSION }}.git-$(echo "$GITHUB_SHA" | head -c 7)"
+          echo "image_version_short=$IMAGE_VERSION_SHORT" | tee -a "$GITHUB_OUTPUT"
+          BUILD_VERSION="$IMAGE_VERSION_SHORT.build-$(date +'%Y%m%d%H%M')"
           echo "build_version=$BUILD_VERSION" | tee -a "$GITHUB_OUTPUT"
           JAVA_VERSION="$(echo "${{ env.JAVA_VERSION }}" | grep -E "^[0-9]+$")"
           echo "java_version=$JAVA_VERSION"   | tee -a "$GITHUB_OUTPUT"
-          DOCKER_IMAGE="$(echo "ghcr.io/$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          DOCKER_IMAGE="$(echo "${{ env.DOCKER_REGISTRY }}/$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
           echo "docker_image=$DOCKER_IMAGE"   | tee -a "$GITHUB_OUTPUT"
 
   build_hotspot:
-    name: "HotSpot"
+    name: "Build (HotSpot)"
     runs-on: "ubuntu-latest"
     needs: [ "set_variables" ]
     steps:
@@ -64,7 +69,7 @@ jobs:
           path: "target/mcw.jar"
 
   build_graal:
-    name: "GraalVM"
+    name: "Build (GraalVM)"
     runs-on: "ubuntu-latest"
     needs: [ "set_variables", "build_hotspot" ]
     container:
@@ -91,3 +96,67 @@ jobs:
         with:
           name: "mcw-${{ runner.os }}-${{ runner.arch }}"
           path: "target/mcw"
+
+  publish:
+    name: "Publish"
+    runs-on: "ubuntu-latest"
+    needs: [ "set_variables", "build_hotspot", "build_graal" ]
+    permissions:
+      contents: "read"
+      packages: "write"
+
+    strategy:
+      matrix:
+        includes:
+          - artifact: "mcw.jar"
+            docker_target: "hotspot"
+          - artifact: "mcw-${{ runner.os }}-${{ runner.arch }}"
+            docker_target: "graal"
+
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+      - name: "Download artifact"
+        uses: "actions/download-artifact@v4"
+        with:
+          name: "${{ matrix.artifact }}"
+          path: "${{ github.workspace }}/target"
+      - name: "Set up QEMU"
+        uses: "docker/setup-qemu-action@v3"
+      - name: "Set up Docker Buildx"
+        uses: "docker/setup-buildx-action@v3"
+      - name: "Cache Docker layers"
+        uses: "actions/cache@v4"
+        with:
+          path: "${{ env.DOCKER_LAYER_CACHE }}"
+          key: "${{ runner.os }}-jdk-${{ env.JAVA_VERSION }}-${{ matrix.docker_target }}-${{ github.sha }}"
+          restore-keys: |
+            ${{ runner.os }}-jdk-${{ env.JAVA_VERSION }}-${{ matrix.docker_target }}-
+      - name: "Log in to the Container registry"
+        uses: "docker/login-action@v3"
+        with:
+          registry: "${{ env.DOCKER_REGISTRY }}"
+          username: "${{ github.actor }}"
+          password: "${{ secrets.GITHUB_TOKEN }}"
+      - name: "Extract metadata (tags, labels) for Docker"
+        id: "meta"
+        uses: "docker/metadata-action@v5"
+        with:
+          images: "${{ needs.set_variables.outputs.docker_image }}"
+          tags: |
+            type=raw,event=push,enable=true,value=${{ needs.set_variables.outputs.build_version }}-${{ matrix.docker_target }}
+            type=raw,event=push,enable={{ is_default_branch }},value=${{ needs.set_variables.outputs.image_version_short }}-${{ matrix.docker_target }}
+      - name: "Build and push Docker image"
+        uses: "docker/build-push-action@v5"
+        with:
+          context: "."
+          push: "true"
+          platforms: "linux/amd64"
+          provenance: false
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          target: ${{ matrix.docker_target }}
+          build-args: |
+            JAVA_VERSION=${{ env.JAVA_VERSION }}
+          cache-from: type=local,src=${{ env.DOCKER_LAYER_CACHE }}
+          cache-to: type=local,dest=${{ env.DOCKER_LAYER_CACHE }}
