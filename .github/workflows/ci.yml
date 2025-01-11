@@ -13,24 +13,30 @@ jobs:
     name: "Set build variables"
     runs-on: "ubuntu-latest"
     outputs:
-      build_image: "${{ steps.build_variables.outputs.build_image }}"
       build_version: "${{ steps.build_variables.outputs.build_version }}"
+      java_version:  "${{ steps.build_variables.outputs.java_version  }}"
+      docker_image:  "${{ steps.build_variables.outputs.docker_image  }}"
     steps:
       - id: "build_variables"
         run: |
           set -euo pipefail
-          BUILD_IMAGE="$(echo "ghcr.io/$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
-          BUILD_VERSION="git-$(date +'%Y%m%d%H%M')-$(echo "$GITHUB_SHA" | head -c 7)"
-          echo "build_image=$BUILD_IMAGE"     | tee -a "$GITHUB_OUTPUT"
+
+          echo "Setting workflow variables..."
+
+          BUILD_VERSION="jdk-${{ env.JAVA_VERSION }}.git-$(echo "$GITHUB_SHA" | head -c 7).build-$(date +'%Y%m%d%H%M')"
           echo "build_version=$BUILD_VERSION" | tee -a "$GITHUB_OUTPUT"
+          JAVA_VERSION="$(echo "${{ env.JAVA_VERSION }}" | grep -E "^[0-9]+$")"
+          echo "java_version=$JAVA_VERSION"   | tee -a "$GITHUB_OUTPUT"
+          DOCKER_IMAGE="$(echo "ghcr.io/$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          echo "docker_image=$DOCKER_IMAGE"   | tee -a "$GITHUB_OUTPUT"
 
   build_hotspot:
     name: "HotSpot"
     runs-on: "ubuntu-latest"
     needs: [ "set_variables" ]
     container:
-      image: "ghcr.io/mangadex-pub/jdk-maven:${{ env.JAVA_VERSION }}-corretto"
-      options: "--user root" # this is sad, but Github CI is (once again) very silly
+      image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.build_variables.outputs.java_version }}-corretto"
+      options: "--user root"
     steps:
       - name: "Maven Build (JIT)"
         uses: "./.github/actions/maven-build.yml"
@@ -48,8 +54,8 @@ jobs:
     runs-on: "ubuntu-latest"
     needs: [ "set_variables", "build_hotspot" ]
     container:
-      image: "ghcr.io/mangadex-pub/jdk-maven:${{ env.JAVA_VERSION }}-graal"
-      options: "--user root" # this is sad, but Github CI is (once again) very silly
+      image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.build_variables.outputs.java_version }}-graal"
+      options: "--user root"
     steps:
       - name: "Maven Build (AOT)"
         uses: "./.github/actions/maven-build.yml"
