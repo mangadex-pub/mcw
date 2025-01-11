@@ -32,7 +32,7 @@ jobs:
           echo "build_version=$BUILD_VERSION" | tee -a "$GITHUB_OUTPUT"
           JAVA_VERSION="$(echo "${{ env.JAVA_VERSION }}" | grep -E "^[0-9]+$")"
           echo "java_version=$JAVA_VERSION"   | tee -a "$GITHUB_OUTPUT"
-          DOCKER_IMAGE="$(echo "${{ env.DOCKER_REGISTRY }}/$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          DOCKER_IMAGE="$(echo "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
           echo "docker_image=$DOCKER_IMAGE"   | tee -a "$GITHUB_OUTPUT"
 
   build_hotspot:
@@ -73,6 +73,7 @@ jobs:
     with:
       JAVA_VERSION: "${{ needs.set_variables.outputs.java_version }}"
       ARTIFACT_NAME: "mcw.jar"
+      DOCKER_REGISTRY: "ghcr.io"
       DOCKER_IMAGE: "${{ needs.set_variables.outputs.docker_image }}"
       DOCKER_TARGET: "hotspot"
       DOCKER_TAG_CANONICAL: "${{ needs.set_variables.outputs.build_version }}-hotspot"
@@ -114,6 +115,7 @@ jobs:
     with:
       JAVA_VERSION: "${{ needs.set_variables.outputs.java_version }}"
       ARTIFACT_NAME: "mcw-bin"
+      DOCKER_REGISTRY: "ghcr.io"
       DOCKER_IMAGE: "${{ needs.set_variables.outputs.docker_image }}"
       DOCKER_TARGET: "graal"
       DOCKER_TAG_CANONICAL: "${{ needs.set_variables.outputs.build_version }}-hotspot"

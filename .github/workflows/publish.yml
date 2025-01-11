@@ -7,6 +7,9 @@ on:
       ARTIFACT_NAME:
         type: string
         required: true
+      DOCKER_REGISTRY:
+        type: string
+        required: true
       DOCKER_IMAGE:
         type: string
         required: true
@@ -26,7 +29,6 @@ concurrency:
 
 env:
   DOCKER_LAYER_CACHE: "/tmp/.buildx-cache"
-  DOCKER_REGISTRY: "ghcr.io"
 
 jobs:
   docker:
@@ -56,14 +58,14 @@ jobs:
       - name: "Log in to the Container registry"
         uses: "docker/login-action@v3"
         with:
-          registry: "${{ env.DOCKER_REGISTRY }}"
+          registry: "${{ inputs.DOCKER_REGISTRY }}"
           username: "${{ github.actor }}"
           password: "${{ secrets.GITHUB_TOKEN }}"
       - name: "Extract metadata (tags, labels) for Docker"
         id: "meta"
         uses: "docker/metadata-action@v5"
         with:
-          images: "${{ inputs.DOCKER_IMAGE }}"
+          images: "${{ inputs.DOCKER_REGISTRY }}/${{ inputs.DOCKER_IMAGE }}"
           tags: |
             type=raw,event=push,enable=true,value=${{ inputs.DOCKER_TAG_CANONICAL }}
             type=raw,event=push,enable={{ is_default_branch }},value=${{ inputs.DOCKER_TAG_SHORT }}
