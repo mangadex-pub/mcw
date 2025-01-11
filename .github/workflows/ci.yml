@@ -39,7 +39,7 @@ jobs:
       options: "--user root"
     steps:
       - name: "Maven Build (JIT)"
-        uses: "./.github/actions/maven-build.yml"
+        uses: "./.github/actions/maven-build"
         with:
           BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
           MAVEN_JOB_ARGS: "verify package"
@@ -58,7 +58,7 @@ jobs:
       options: "--user root"
     steps:
       - name: "Maven Build (AOT)"
-        uses: "./.github/actions/maven-build.yml"
+        uses: "./.github/actions/maven-build"
         with:
           BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
           MAVEN_JOB_ARGS: "package -Pnative -DskipTests"
