@@ -22,7 +22,7 @@ runs:
 
         if [ -n "${{ inputs.JVMOPT_NATIVE_ACCESS }}" ]; then
           echo "Allow native access to modules/classes: ${{ inputs.JVMOPT_NATIVE_ACCESS }}"
-          export MAVEN_OPTS="$MAVEN_OPTS --enable-native-access=${{ inputs.JVMOPT_NATIVE_ACCESS }}"
+          export MAVEN_OPTS="--enable-native-access=${{ inputs.JVMOPT_NATIVE_ACCESS }} ${MAVEN_OPTS:-}"
         fi
 
         mvn -B -e -fae --show-version \
