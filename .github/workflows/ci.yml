@@ -14,8 +14,8 @@ jobs:
     runs-on: "ubuntu-latest"
     outputs:
       build_version: "${{ steps.set_variables.outputs.build_version }}"
-      java_version:  "${{ steps.set_variables.outputs.java_version  }}"
-      docker_image:  "${{ steps.set_variables.outputs.docker_image  }}"
+      java_version: "${{ steps.set_variables.outputs.java_version  }}"
+      docker_image: "${{ steps.set_variables.outputs.docker_image  }}"
     steps:
       - id: "set_variables"
         run: |
@@ -34,10 +34,14 @@ jobs:
     name: "HotSpot"
     runs-on: "ubuntu-latest"
     needs: [ "set_variables" ]
-    container:
-      image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.set_variables.outputs.java_version }}-corretto"
-      options: "--user root"
     steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
+      - name: "Install JDK"
+        uses: "actions/setup-java@4"
+        with:
+          distribution: "corretto"
+          java-version: "${{ needs.set_variables.outputs.java_version }}"
       - name: "Maven Build (JIT)"
         uses: "./.github/actions/maven-build"
         with:
@@ -57,6 +61,8 @@ jobs:
       image: "ghcr.io/mangadex-pub/jdk-maven:${{ needs.set_variables.outputs.java_version }}-graal"
       options: "--user root"
     steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v4"
       - name: "Maven Build (AOT)"
         uses: "./.github/actions/maven-build"
         with:
