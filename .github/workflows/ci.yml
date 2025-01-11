@@ -57,7 +57,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-owasp-
       - name: "Maven Build"
-        uses: "./.github/actions/maven-build"
+        uses: "./.github/actions/maven"
         with:
           BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
           MAVEN_JOB_ARGS: "dependency-check:check -DnvdApiKey=${{ secrets.NVD_API_KEY }}"
@@ -90,7 +90,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-hotspot-
       - name: "Maven Build"
-        uses: "./.github/actions/maven-build"
+        uses: "./.github/actions/maven"
         with:
           BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
           MAVEN_JOB_ARGS: "verify package"
@@ -133,7 +133,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-graal-
       - name: "Maven Build"
-        uses: "./.github/actions/maven-build"
+        uses: "./.github/actions/maven"
         with:
           BUILD_REVISION: "${{ needs.set_variables.outputs.build_version }}"
           MAVEN_JOB_ARGS: "package -Pnative -DskipTests"
