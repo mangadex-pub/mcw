@@ -70,7 +70,7 @@ jobs:
     needs: [ "set_variables", "build_hotspot" ]
     uses: "./.github/workflows/publish.yml"
     with:
-      JAVA_VERSION: "${{ env.JAVA_VERSION }}"
+      JAVA_VERSION: "${{ needs.set_variables.outputs.java_version }}"
       ARTIFACT_NAME: "mcw.jar"
       DOCKER_IMAGE: "${{ needs.set_variables.outputs.docker_image }}"
       DOCKER_TARGET: "hotspot"
@@ -107,10 +107,10 @@ jobs:
           path: "target/mcw"
 
   publish_graal:
-    needs: [ "set_variables", "build_hotspot" ]
+    needs: [ "set_variables", "build_graal" ]
     uses: "./.github/workflows/publish.yml"
     with:
-      JAVA_VERSION: "${{ env.JAVA_VERSION }}"
+      JAVA_VERSION: "${{ needs.set_variables.outputs.java_version }}"
       ARTIFACT_NAME: "mcw-bin"
       DOCKER_IMAGE: "${{ needs.set_variables.outputs.docker_image }}"
       DOCKER_TARGET: "graal"
