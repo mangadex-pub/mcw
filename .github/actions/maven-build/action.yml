@@ -11,21 +11,14 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: "Cache local Maven repository"
-      uses: "actions/cache@v4"
-      with:
-        path: "~/.m2/repository"
-        key: "${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pom.xml') }}"
-        restore-keys: |
-          ${{ runner.os }}-${{ runner.arch }}-
     - name: "Build and test"
       shell: "bash"
       run: |
         set -euo pipefail
 
         mvn -B -e -fae --show-version \
-            -Dmaven.repo.local="$HOME/.m2/repository" \
-            -DsurefireTmpDir="$(pwd)/.github/tmpdir" \
+            -Dmaven.repo.local="${{ github.workspace }}/.ci/transient/m2-repo" \
+            -DsurefireTmpDir="${{ github.workspace }}/.ci/transient/surefireTmpDir" \
             -Drevision="${{ inputs.BUILD_REVISION }}" \
             ${{ inputs.MAVEN_JOB_ARGS }}
 

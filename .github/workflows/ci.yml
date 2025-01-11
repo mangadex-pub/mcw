@@ -42,6 +42,14 @@ jobs:
         with:
           distribution: "corretto"
           java-version: "${{ needs.set_variables.outputs.java_version }}"
+      - name: "Cache Maven repository"
+        uses: "actions/cache@v4"
+        with:
+          path: "${{ github.workspace }}/.ci/transient/m2-repo"
+          key: "${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pom.xml') }}"
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-
+            ${{ runner.os }}-
       - name: "Maven Build (JIT)"
         uses: "./.github/actions/maven-build"
         with:
@@ -63,6 +71,14 @@ jobs:
     steps:
       - name: "Checkout repository"
         uses: "actions/checkout@v4"
+      - name: "Cache Maven repository"
+        uses: "actions/cache@v4"
+        with:
+          path: "${{ github.workspace }}/.ci/transient/m2-repo"
+          key: "${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('pom.xml') }}"
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-
+            ${{ runner.os }}-
       - name: "Maven Build (AOT)"
         uses: "./.github/actions/maven-build"
         with:
