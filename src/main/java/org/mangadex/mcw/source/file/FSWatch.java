@@ -4,6 +4,7 @@ import static java.nio.file.Files.newInputStream;
 
 import java.io.BufferedInputStream;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
@@ -13,6 +14,7 @@ import org.springframework.util.DigestUtils;
 class FSWatch extends Thread {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FSWatch.class);
+    private static final AtomicInteger COUNTER = new AtomicInteger();
 
     private final FSSource source;
     private final Consumer<String> callback;
@@ -22,7 +24,7 @@ class FSWatch extends Thread {
     FSWatch(FSSource source, Consumer<String> callback) {
         this.source = source;
         this.callback = callback;
-        setName(source.toString());
+        setName("watch-" + COUNTER.getAndIncrement());
         setUncaughtExceptionHandler((_, e) -> LOGGER.error("Uncaught exception", e));
     }
 

@@ -18,9 +18,9 @@ import org.mangadex.mcw.render.Render;
 public final class ScheduledRenderTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledRenderTask.class);
-    private static final AtomicInteger SRTi = new AtomicInteger();
+    private static final AtomicInteger COUNTER = new AtomicInteger();
 
-    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(t -> new Thread(t, "srt-" + SRTi.getAndIncrement()));
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(t -> new Thread(t, "rendr-" + COUNTER.getAndIncrement()));
     private final AtomicReference<ScheduledFuture<?>> nextTick = new AtomicReference<>();
 
     private final ThrowingFunction<String, Render> render;
