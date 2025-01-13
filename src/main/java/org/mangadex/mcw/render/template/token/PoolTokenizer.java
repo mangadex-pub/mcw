@@ -28,7 +28,7 @@ public class PoolTokenizer {
     }
 
     public List<ServerToken> tokenize(String name, JsonNode pool) {
-        LOGGER.debug("Tokenizing pool[{}]", name);
+        LOGGER.trace("Tokenizing pool[{}]", name);
 
         if (pool == null || pool.isNull()) {
             throw new PoolTokenizationException(name, "is null");
@@ -76,7 +76,7 @@ public class PoolTokenizer {
                 failedParses.add("- servers[" + i + "] is not a valid server token (from: '" + serverItemString + "')");
             }
 
-            LOGGER.debug("+ pools[{}]->servers[{}]='{}' = {}", name, i, serverItemString, serverToken);
+            LOGGER.trace("+ pools[{}]->servers[{}]='{}' -> {}", name, i, serverItemString, serverToken);
             successfulParses.add(serverToken);
         }
 

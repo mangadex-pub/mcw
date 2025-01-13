@@ -1,32 +1,51 @@
-package org.mangadex.mcw;
+package org.mangadex.mcw.lifecycle;
 
 import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.context.SmartLifecycle;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
-import org.mangadex.mcw.lifecycle.MCRConfigCollector;
-import org.mangadex.mcw.lifecycle.MCRWatchLifecycler;
-
 @Component
-public class Bootstrap implements ApplicationRunner {
+public class MCRLifecycle implements SmartLifecycle {
 
+    private final ApplicationArguments applicationArguments;
     private final MCRConfigCollector configCollector;
-    private final MCRWatchLifecycler watchLifecycler;
+    private final MCRWatchRegistry watchLifecycler;
 
-    public Bootstrap(MCRConfigCollector configCollector, MCRWatchLifecycler watchLifecycler) {
+    private final AtomicBoolean running = new AtomicBoolean(false);
+
+    public MCRLifecycle(
+        ApplicationArguments applicationArguments,
+        MCRConfigCollector configCollector,
+        MCRWatchRegistry watchLifecycler
+    ) {
+        this.applicationArguments = applicationArguments;
         this.configCollector = configCollector;
         this.watchLifecycler = watchLifecycler;
     }
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
-        configCollector.findAll(args).forEach(watchLifecycler::register);
+    public void start() {
+        watchLifecycler.start();
+        configCollector.findAll(applicationArguments).forEach(watchLifecycler::register);
+        running.set(true);
+    }
+
+    @Override
+    public void stop() {
+        running.set(false);
+        watchLifecycler.stop();
+    }
+
+    @Override
+    public boolean isRunning() {
+        return running.get();
     }
 
     public record BuildInfo(

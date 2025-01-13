@@ -36,7 +36,7 @@ import org.mangadex.mcw.source.file.FSSource;
 class LifecycleTest {
 
     @Autowired
-    private MCRWatchLifecycler lifecycler;
+    private MCRWatchRegistry lifecycler;
 
     @Test
     void registerAndEditTemplate(@TempDir Path tempDir) throws IOException, JSONException {

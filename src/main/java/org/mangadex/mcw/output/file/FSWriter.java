@@ -43,7 +43,7 @@ public class FSWriter implements Writer<FSOutput> {
         LOGGER.debug("Using temporary file {}", tmp.toAbsolutePath());
 
         Files.writeString(tmp, rendered, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        LOGGER.trace("Write rendered configuration to temporary file {}", target);
+        LOGGER.debug("Wrote rendered configuration to temporary file {}", target);
 
         moveTmpToTarget(tmp, finalPath, writeMethod);
         if (target.attributes().uid() != null) {

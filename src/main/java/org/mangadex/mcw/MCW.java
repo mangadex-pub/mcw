@@ -6,7 +6,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 
-import org.mangadex.mcw.Bootstrap.BuildInfo;
+import org.mangadex.mcw.lifecycle.MCRLifecycle.BuildInfo;
 
 @SpringBootApplication
 @ConfigurationPropertiesScan

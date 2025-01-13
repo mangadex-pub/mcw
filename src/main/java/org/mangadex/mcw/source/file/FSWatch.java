@@ -34,7 +34,7 @@ class FSWatch extends Thread {
 
     @Override
     public void run() {
-        LOGGER.debug("Started watch {}", source);
+        LOGGER.debug("Started FSWatch for {}", source);
         String lastChecksum = null;
         while (running) {
             try (var is = new BufferedInputStream(newInputStream(source.path()))) {
@@ -61,7 +61,7 @@ class FSWatch extends Thread {
                 Thread.currentThread().interrupt();
             }
         }
-        LOGGER.info("Stopped watch {}", source);
+        LOGGER.debug("Stopped FSWatch for {}", source);
     }
 
     public void shutdown() {

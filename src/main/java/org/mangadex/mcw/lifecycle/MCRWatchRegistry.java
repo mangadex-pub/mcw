@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.info.Info.Builder;
 import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.SmartLifecycle;
 import org.springframework.stereotype.Component;
 import org.springframework.util.function.ThrowingConsumer;
 
@@ -24,22 +23,22 @@ import org.mangadex.mcw.source.file.FSSource;
 import org.mangadex.mcw.source.file.FSWatcher;
 
 @Component
-public class MCRWatchLifecycler implements SmartLifecycle, InfoContributor {
+public class MCRWatchRegistry implements InfoContributor {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MCRWatchLifecycler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MCRWatchRegistry.class);
 
     private final ApplicationContext context;
     private final RenderService renderService;
-    private final LifecycleProperties lifecycleProperties;
+    private final MCRConfigProperties mcrConfigProperties;
 
     private final AtomicBoolean running = new AtomicBoolean(false);
     private final Map<MCRConfig, Registration> registrations = new ConcurrentHashMap<>();
     private final Set<MCRConfig> registeredConfigs = unmodifiableSet(registrations.keySet());
 
-    public MCRWatchLifecycler(ApplicationContext context, RenderService renderService, LifecycleProperties lifecycleProperties) {
+    public MCRWatchRegistry(ApplicationContext context, RenderService renderService, MCRConfigProperties mcrConfigProperties) {
         this.context = context;
         this.renderService = renderService;
-        this.lifecycleProperties = lifecycleProperties;
+        this.mcrConfigProperties = mcrConfigProperties;
     }
 
     public void register(MCRConfig config) {
@@ -47,7 +46,7 @@ public class MCRWatchLifecycler implements SmartLifecycle, InfoContributor {
             throw new IllegalStateException("Application is not running yet. Ignoring registration of " + config);
         }
 
-        LOGGER.info("Registering config watch for {}", config);
+        LOGGER.debug("Registering config watch for {}", config);
 
         var source = config.source();
         var output = config.output();
@@ -64,7 +63,7 @@ public class MCRWatchLifecycler implements SmartLifecycle, InfoContributor {
         ScheduledRenderTask renderTask = new ScheduledRenderTask(
             renderService::render,
             writeToOutput,
-            lifecycleProperties.retryDelaySeconds()
+            mcrConfigProperties.lifecycle().retryDelaySeconds()
         );
 
         switch (source) {
@@ -82,13 +81,11 @@ public class MCRWatchLifecycler implements SmartLifecycle, InfoContributor {
         LOGGER.info("Started config watch for {}", config);
     }
 
-    @Override
     public void start() {
-        LOGGER.info("Starting config watches");
+        LOGGER.debug("Starting config watches");
         running.set(true);
     }
 
-    @Override
     public void stop() {
         LOGGER.info("Shutting down all config watches");
         running.set(false);
@@ -101,11 +98,6 @@ public class MCRWatchLifecycler implements SmartLifecycle, InfoContributor {
                 LOGGER.error("Error while stopping config watch for {}", config, t);
             }
         });
-    }
-
-    @Override
-    public boolean isRunning() {
-        return running.get();
     }
 
     @Override

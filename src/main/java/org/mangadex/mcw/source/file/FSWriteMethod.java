@@ -63,11 +63,11 @@ public enum FSWriteMethod {
         }
 
         if (Objects.equals(fstore, TMPDIR_FILESTORE)) {
-            LOGGER.debug("tmpdir and path parent {} have the same backing filesystem, using tmpdir atomic move write method", path);
+            LOGGER.trace("tmpdir and path parent {} have the same backing filesystem, using tmpdir atomic move write method", path);
             return FSWriteMethod.TMPDIR_ATOMIC;
         }
 
-        LOGGER.debug("tmpdir and path parent {} have different backing filesystem, using sibling atomic move write method", path);
+        LOGGER.trace("tmpdir and path parent {} have different backing filesystem, using sibling atomic move write method", path);
         return FSWriteMethod.SIBLING_ATOMIC;
     }
 

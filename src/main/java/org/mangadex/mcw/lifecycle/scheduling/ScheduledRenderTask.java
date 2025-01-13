@@ -1,9 +1,11 @@
 package org.mangadex.mcw.lifecycle.scheduling;
 
+import java.util.Objects;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.slf4j.Logger;
@@ -16,13 +18,16 @@ import org.mangadex.mcw.render.Render;
 public final class ScheduledRenderTask {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScheduledRenderTask.class);
+    private static final AtomicInteger SRTi = new AtomicInteger();
 
-    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor(t -> new Thread(t, "srt-" + SRTi.getAndIncrement()));
     private final AtomicReference<ScheduledFuture<?>> nextTick = new AtomicReference<>();
 
     private final ThrowingFunction<String, Render> render;
     private final ThrowingConsumer<String> write;
     private final long retryDelaySeconds;
+
+    private Render lastRender;
 
     public ScheduledRenderTask(
         ThrowingFunction<String, Render> render,
@@ -43,19 +48,28 @@ public final class ScheduledRenderTask {
             nextTick.get().cancel(true);
         }
 
-        renderWriteAndSchedule(template);
+        if (executor.isShutdown()) {
+            LOGGER.info("Render task is shutting down, ignoring template change...");
+            return;
+        }
+        executor.submit(() -> renderWriteAndSchedule(template));
     }
 
     private void renderWriteAndSchedule(String template) {
         if (executor.isShutdown()) {
-            LOGGER.warn("Render task is shutting down, ignoring template change...");
             return;
         }
 
         long nextScheduleSeconds;
         try {
             Render render = this.render.applyWithException(template);
-            write.accept(render.rendered());
+            if (lastRender == null || !Objects.equals(lastRender.rendered(), render.rendered())) {
+                LOGGER.info("Configuration changed: {} -> {}", lastRender == null ? "null" : lastRender.md5sum(), render.md5sum());
+                write.accept(render.rendered());
+                lastRender = render;
+            } else {
+                LOGGER.debug("Configuration left unchanged after rendering");
+            }
             nextScheduleSeconds = render.ttl();
         } catch (Exception e) {
             LOGGER.error("Failed rendering template", e);

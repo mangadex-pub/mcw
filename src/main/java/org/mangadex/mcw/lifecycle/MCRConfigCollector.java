@@ -1,7 +1,5 @@
 package org.mangadex.mcw.lifecycle;
 
-import static java.util.Arrays.stream;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,24 +28,25 @@ public class MCRConfigCollector {
 
         var argWatch = parseFromArguments(args);
         if (argWatch != null) {
-            LOGGER.info("Added application arguments watch: {}", argWatch);
+            LOGGER.info("Found arguments-based watch: {}", argWatch);
             watches.add(argWatch);
         }
 
         var configWatches = parseFromConfig();
-        LOGGER.debug("Added configuration watches: {}", watches);
-        watches.addAll(configWatches);
+        if (configWatches != null && !configWatches.isEmpty()) {
+            LOGGER.debug("Found configuration-based watches: {}", watches);
+            watches.addAll(configWatches);
+        }
 
         return watches;
     }
 
     private MCRConfig parseFromArguments(ApplicationArguments args) {
-        LOGGER.debug("Parsing watch from arguments: {}", stream(args.getSourceArgs()).toList());
-
+        LOGGER.trace("Parsing watch from {} arguments", args.getOptionNames().size());
         boolean hasSource = args.containsOption("source");
         boolean hasOutput = args.containsOption("output");
         if (!hasSource && !hasOutput) {
-            LOGGER.debug("No source or output specified in arguments");
+            LOGGER.trace("No source or output specified in arguments");
             return null;
         }
 
@@ -65,16 +64,19 @@ public class MCRConfigCollector {
             throw new IllegalArgumentException("Expected exactly one 'output' option");
         }
 
-        return MCRConfigParser.parseWatch(sourceOpt.getFirst(), outputOpt.getFirst());
+        var watch = MCRConfigParser.parseWatch(sourceOpt.getFirst(), outputOpt.getFirst());
+        LOGGER.trace("+ watch {}", watch);
+        return watch;
     }
 
     private List<MCRConfig> parseFromConfig() {
-        LOGGER.debug("Parsing configs from configuration: {}", MCRConfigProperties.configs());
+        LOGGER.trace("Parsing configs from configuration: {}", MCRConfigProperties.configs());
 
         return MCRConfigProperties
             .configs()
             .stream()
             .map(wce -> MCRConfigParser.parseWatch(wce.source(), wce.output()))
+            .peek(watch -> LOGGER.trace("+ watch {}", watch))
             .toList();
     }
 

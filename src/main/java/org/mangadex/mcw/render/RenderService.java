@@ -51,7 +51,7 @@ public class RenderService {
     }
 
     public Render render(String template) throws IOException {
-        LOGGER.debug("Rendering template\n{}", template);
+        LOGGER.trace("Rendering template\n{}", template);
 
         var root = objectMapper.readTree(template);
         long minDnsTTL = Long.MAX_VALUE;
@@ -66,10 +66,10 @@ public class RenderService {
             var poolEntry = poolEntries.next();
             var poolName = poolEntry.getKey();
             var pool = poolEntry.getValue();
-            LOGGER.debug("Processing pool[{}]", poolName);
+            LOGGER.trace("Processing pool[{}]", poolName);
 
             var serverTokens = tokenizer.tokenize(poolName, pool);
-            LOGGER.debug("Tokenized pool[{}]->servers into {}", poolName, serverTokens);
+            LOGGER.trace("Tokenized pool[{}]->servers into {}", poolName, serverTokens);
 
             var poolServers = serverTokens.stream().map(this::resolve).flatMap(List::stream).toList();
             var poolTTL = poolServers
@@ -99,7 +99,7 @@ public class RenderService {
     }
 
     private List<ResolvedServer> resolve(ServerToken token) {
-        LOGGER.debug("Resolving token {}", token);
+        LOGGER.trace("Resolving token {}", token);
         return switch (token) {
             case FixedToken ft -> List.of(new ResolvedServer(ft.value(), ft, Long.MAX_VALUE));
             case DNSAToken a -> resolveDNSA(a);

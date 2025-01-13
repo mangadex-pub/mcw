@@ -70,7 +70,7 @@ public class DnsResolver {
                 if (r.getType() != Type.A) {
                     LOGGER.warn("Unexpected non-A record discarded: {}", r);
                 } else {
-                    LOGGER.debug("+ A record {}", r);
+                    LOGGER.trace("+ A record {}", r);
                 }
             })
             .filter(r -> r.getType() == Type.A)
@@ -88,7 +88,7 @@ public class DnsResolver {
                 if (r.getType() != Type.SRV) {
                     LOGGER.debug("Unexpected non-SRV response in SRV query: {}", r);
                 } else {
-                    LOGGER.debug("+ SRV record {}", r);
+                    LOGGER.trace("+ SRV record {}", r);
                 }
             })
             .filter(r -> r.getType() == Type.SRV)

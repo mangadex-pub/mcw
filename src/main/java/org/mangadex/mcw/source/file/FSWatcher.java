@@ -37,7 +37,7 @@ public class FSWatcher implements Watcher<FSSource> {
             if (WATCHES.containsKey(source)) {
                 LOGGER.warn("File watch already exists on {}", source);
             } else {
-                LOGGER.debug("Registered file watch on {}", source);
+                LOGGER.debug("Registered FSWatch on {}", source);
                 FSWatch watch = new FSWatch(source, onChanged);
                 WATCHES.put(source, watch);
                 watch.start();

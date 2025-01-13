@@ -87,7 +87,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <argLine>--enable-preview -Djava.io.tmpdir=${surefireTmpDir} @{jacoco.surefireArgLine} -javaagent:${org.mockito:mockito-core:jar} -Dspring.profiles.active=test</argLine>
+                    <argLine>--enable-preview -Djava.io.tmpdir=${surefireTmpDir} @{jacoco.surefireArgLine} -javaagent:${org.mockito:mockito-core:jar}
+                        -Dspring.profiles.active=test
+                    </argLine>
                     <redirectTestOutputToFile>true</redirectTestOutputToFile>
                 </configuration>
             </plugin>
