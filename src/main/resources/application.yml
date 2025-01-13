@@ -57,7 +57,7 @@ management:
     access:
       default: read_only
     web:
-      base-path: /actuator
+      base-path: /__mon
       exposure:
         include:
           - info
@@ -66,8 +66,11 @@ management:
           - prometheus
   health:
     diskspace:
-      path: "${java.io.tmpdir}"
+      enabled: false
   metrics:
+    system:
+      diskspace:
+        paths: [ "${java.io.tmpdir}" ]
     # see: https://github.com/spring-projects/spring-boot/issues/38583
     tags:
       application: ${spring.application.name}
