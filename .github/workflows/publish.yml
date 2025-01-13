@@ -72,7 +72,7 @@ jobs:
             type=raw,event=push,enable=true,value=${{ inputs.DOCKER_TAG_CANONICAL }}-${{ inputs.DOCKER_TARGET }}
             type=raw,event=push,enable={{ is_default_branch }},value=${{ inputs.DOCKER_TAG_SHORT }}-${{ inputs.DOCKER_TARGET }}
       - name: "Build and push Docker image"
-        uses: "docker/build-push-action@v5"
+        uses: "docker/build-push-action@v6"
         with:
           context: "."
           push: "true"
