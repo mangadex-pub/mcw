@@ -77,12 +77,12 @@ public class RenderService {
                 .mapToLong(ResolvedServer::ttl)
                 .min()
                 .orElse(Long.MAX_VALUE); // empty result, essentially
-            LOGGER.debug("Resolved pool[{}]->servers into {} (ttl={}s)", poolName, poolServers, poolTTL);
+            LOGGER.trace("Resolved pool[{}]->servers into {} (ttl={}s)", poolName, poolServers, poolTTL);
 
             minDnsTTL = min(poolTTL, minDnsTTL);
 
             var poolHostPorts = poolServers.stream().map(ResolvedServer::value).map(TextNode::new).toList();
-            LOGGER.debug("Final pool[{}]->servers = {}", poolName, poolHostPorts);
+            LOGGER.debug("Resolved pool[{}]->servers = {} (ttl={}s)", poolName, poolHostPorts, poolTTL);
 
             var serversNode = pool.withArrayProperty("servers");
             serversNode.removeAll();
@@ -94,7 +94,13 @@ public class RenderService {
         var renderTTL = max(minTTL, min(minDnsTTL, maxTTL));
 
         var rendered = objectMapper.writeValueAsString(root);
-        LOGGER.debug("Rendered template (ttl={}s) with content \n{}", renderTTL, rendered);
+
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Rendered template with ttl={}s and content '{}'", renderTTL, rendered);
+        } else if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Rendered template with ttl={}s", renderTTL);
+        }
+
         return new Render(rendered, renderTTL);
     }
 
