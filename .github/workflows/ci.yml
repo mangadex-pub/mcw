@@ -41,7 +41,7 @@ jobs:
     needs: [ "set_variables" ]
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           persist-credentials: false
       - name: "Install JDK"
@@ -74,7 +74,7 @@ jobs:
     needs: [ "set_variables" ]
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           persist-credentials: false
       - name: "Install JDK"
@@ -122,7 +122,7 @@ jobs:
       options: "--user root"
     steps:
       - name: "Checkout repository"
-        uses: "actions/checkout@v4"
+        uses: "actions/checkout@v5"
         with:
           persist-credentials: false
       - name: "Cache Maven repository"
